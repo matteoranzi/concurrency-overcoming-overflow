@@ -56,4 +56,4 @@ The following algorithm, here called *Overcoming Overflow* algorithm, is one suc
 
 
 
-[^1]: (https://dl.acm.org/doi/epdf/10.1145/361082.361093)
+[^1]: [Leslie Lamport, “A New Solution of Dijkstra’s Concurrent Programming Problem,” Communications of the ACM, 17(8), August 1974, pp. 453–455](https://dl.acm.org/doi/epdf/10.1145/361082.361093)
