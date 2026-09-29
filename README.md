@@ -25,6 +25,14 @@ In 1974, Leslie Lamport published an article called *A New Solution of Dijkstra'
 > 3. Any computer may halt in its noncritical section.
 > 
 > Moreover, no assumptions can be made about the running speeds of the computers.
+>
+> [...]
+>
+> The relation "less than" on ordered pairs of integers is defined by $(a,b) \lt (c,d) \texttt{ if } a \lt c, \texttt{ or if } a=c \texttt{ and } b < d$. 
+
+\
+*Throughout this document, the comparison of ordered pairs will also be referred to as lexicographical ordering or tie-breaking rule.*
+
 
 ---
 
@@ -46,30 +54,34 @@ The following algorithm, here called *Overcoming Overflow* algorithm (OO), is on
 //TODO
 
 ## Variant of the Overcoming Overflow algorithm
-The *OO* variant differs from the original only in the comparison operator on line $04$
+The proposed variant, denoted $\mathrm{OO}'$, differs from the original algorithm $\mathrm{OO}$ in a single line: the comparison at line 04 is replaced by
 
 $$
-\texttt{label[temp1]} \leq \texttt{label[temp2]}
+\texttt{label[temp1]} \leq \texttt{label[temp2]}.
 $$
+
 
 That is, $\leq$ is used instead of $\lt$.
 
-The core idea is that in the original *OO* the condition at line $04$ is in a reversed lexicographical order compared to the one defined at line $12$: 
-the combination of the $\texttt{for}$ loop at line $03$ and the inner selection of the highest label's index via the $\lt$ operator, implicitly creates a lexicographical order where labels with a greater index are prioritised. Contrary to the lexicographical condition at line $12$: $(label[j], j) \ll (label[i], i)$
-
-Essentially, it is as if in the *doorway interval* we have the following lexicographically order:
+**Motivation.** In $\mathrm{OO}$, the doorway and the waiting room break ties between equal labels in opposite directions. Let $\prec_w$ be the order used in the waiting room (line 12):
 
 $$
-(a, b) \lt (c, d) \text{ if } a \lt c, \text{ or if } a=c \text { and } b \gt d 
+(a, b) \prec_w (c, d) \iff a < c \,\lor\, (a = c \land b < d).
 $$
 
-While in the *waiting interval* we have:
+Under $\prec_w$, among processes holding equal labels, the one with the largest index is the *last* to enter the critical section. The scan at lines 03-07 is intended to select the maximum element under this order, but with the strict inequality at line 04 it implicitly maximizes with respect to a different order,
 
 $$
-(a, b) \lt (c, d) \text{ if } a \lt c, \text{ or if } a=c \text { and } b \lt d 
+(a, b) \prec_d (c, d) \iff a < c \,\lor\, (a = c \land b > d),
 $$
 
-Hence, assuming equal max label value, in the *doorway interval* we are referencing as "latest element" the ones with a smaller index, since in the $\texttt{for}$ loop at line $03$, the $\lt$ condition considers **only** the index of the first-occurence (lower), while in the *waiting interval* we are considering as "latest element" the ones with a bigger index.
+whose tie-breaker on the index is reversed.
+
+**Tie-breaking in the doorway.** Let $m = \max_k \texttt{label[}k\texttt{]}$ be the maximum label observed by the scan at lines 03-07, and let $M = \{k \mid \texttt{label[}k\texttt{]} = m\}$. In $\mathrm{OO}$, the strict comparison at line 04 updates $\texttt{temp1}$ only when a strictly larger label is found. Hence, for $m > 0$, the scan returns $\min M$, the *first* occurrence of the maximum. For example, on the labels $(2, 4, 1, 5, 2, 5)$ it returns index 3. For $m = 0$, no update ever occurs and the scan returns $i$, the index of the calling process, which belongs to $M$ but is in general neither $\min M$ nor $\max M$. In $\mathrm{OO}'$, the update also occurs on equality, so the scan returns $\max M$, the *last* occurrence of the maximum, for every value of $m$ (index 5 in the example, and $n-1$ when $m = 0$).
+
+
+In the waiting room, by contrast, line 12 orders processes with equal labels by increasing index, so the process with index $\max M$ is the *last* to be served among those in $M$. The doorway of $\mathrm{OO}$ therefore selects as reference the element of $M$ that the waiting room serves *first*, whereas the doorway of $\mathrm{OO}'$ selects the one it serves *last*, which is the maximum under the waiting-room order.
+
 
 **The following section will demonstrate that such simple edit will garantee mutual exclusion**.
 
@@ -79,3 +91,9 @@ Hence, assuming equal max label value, in the *doorway interval* we are referenc
 # References
 
 [^1]: [Leslie Lamport, “A New Solution of Dijkstra’s Concurrent Programming Problem,” Communications of the ACM, 17(8), August 1974, pp. 453–455](https://dl.acm.org/doi/epdf/10.1145/361082.361093)
+
+
+---
+
+# TODO
+- One thing to make explicit: why the identity of the selected process matters and not just its label value. Since line 08 re-reads label[temp1], the value can differ from the one seen at line 04 if process temp1 changes its label in between. Since that is the argument for the failure of $\mathrm{OO}$, it deserves its own sentence, ideally followed by the interleaving trace.
