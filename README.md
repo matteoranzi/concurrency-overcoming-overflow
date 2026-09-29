@@ -36,7 +36,7 @@ As stated by Lamport himself in the *Further Remarks* section:
 > 
 > This problem cannot be solved by any simple scheme of cycling through a finite set of integers.
 
-Even though «*practical considerations will place an upper bound on the value of $number[i]$ in any real application*» various attempts were made to address the issue of integer overflow.
+Even though «practical considerations will place an upper bound on the value of $number[i]$ in any real application» various attempts were made to address the issue of integer overflow.
 
 The following algorithm, here called *Overcoming Overflow* algorithm, is one such attempt.
 
